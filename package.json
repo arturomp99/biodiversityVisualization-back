@@ -1,0 +1,19 @@
+{
+  "name": "tfm-backend",
+  "version": "1.0.0",
+  "description": "backend for the biodiversity visualization react app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arturomp99/biodiversityVisualization-back.git"
+  },
+  "author": "Arturo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/arturomp99/biodiversityVisualization-back/issues"
+  },
+  "homepage": "https://github.com/arturomp99/biodiversityVisualization-back#readme"
+}
