@@ -1,0 +1,1 @@
+export { dataController } from "./dataController";
