@@ -9,6 +9,7 @@ const app = express();
 
 app.use(cors());
 app.use("/data", dataRouter);
+app.use("/geojson", catalogRouter);
 app.use("/catalog", catalogRouter);
 app.use("/filters", filtersRouter);
 
