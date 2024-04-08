@@ -1,6 +1,14 @@
 import express from "express";
 import dotenv from "dotenv";
-import { catalogRouter, dataRouter, filtersRouter } from "./routes";
+import {
+  audioRouter,
+  catalogRouter,
+  dataRouter,
+  filtersRouter,
+  geojsonRouter,
+} from "./routes";
+import path from "path";
+
 const cors = require("cors");
 
 dotenv.config();
@@ -9,9 +17,15 @@ const app = express();
 
 app.use(cors());
 app.use("/data", dataRouter);
-app.use("/geojson", catalogRouter);
+app.use("/geojson", geojsonRouter);
 app.use("/catalog", catalogRouter);
 app.use("/filters", filtersRouter);
+app.use("/audio", audioRouter);
+
+app.use(
+  process.env.AUDIO_SLUG ?? "/assets/audio",
+  express.static(process.env.AUDIO_REPO ?? "public/audio")
+);
 
 const port = process.env.PORT || 4000;
 app.listen(+port, () =>
