@@ -2,7 +2,26 @@ import { readFileSync } from "fs";
 import { parse } from "papaparse";
 import type { ParseResult } from "papaparse";
 
-type DataType = {
+export type TaxonomicLevelsType =
+  | "phylum"
+  | "class"
+  | "order"
+  | "family"
+  | "genus"
+  | "species"
+  | "scientificName";
+
+export const taxonomicLevels: TaxonomicLevelsType[] = [
+  "phylum",
+  "class",
+  "order",
+  "family",
+  "genus",
+  "species",
+  "scientificName",
+];
+
+export type DataType = Record<TaxonomicLevelsType, string> & {
   occurrenceID: string[];
   basisOfRecord: string[];
   "Preparations (Physical Samples)": string;
