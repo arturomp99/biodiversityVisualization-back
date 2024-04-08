@@ -9,6 +9,10 @@ const getAllData = () => {
   return DataModel.getInstance().data;
 };
 
-getAllData();
+const getAllScientificNames = () => {
+  return DataModel.getInstance().data.data.map(
+    (dataInstance) => dataInstance.scientificName
+  );
+};
 
-export const dataController = { getAllData };
+export const dataController = { getAllData, getAllScientificNames };
