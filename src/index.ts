@@ -7,11 +7,12 @@ import {
   filtersRouter,
   geojsonRouter,
 } from "./routes";
-import path from "path";
+import { CatalogData } from "./models/catalogModel";
 
 const cors = require("cors");
 
 dotenv.config();
+CatalogData.init();
 
 const app = express();
 
