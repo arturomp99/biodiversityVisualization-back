@@ -11,7 +11,7 @@ export type CatalogDataType = {
   usageKey?: string;
   vernacularName?: string;
   descriptions?: GBIFDescriptionType["results"];
-  wikipediaImage?: string;
+  wikipediaResult?: WikipediaResultType;
 };
 
 type GBIFVernacularNamesType = {
@@ -34,6 +34,28 @@ type GBIFDescriptionType = {
     description: string;
     source: string;
   }[];
+};
+
+type WikipediaResponseType = {
+  query: {
+    pages: {
+      [key: string]: {
+        pageId: number;
+        title: string;
+        thumbnail: { source: string };
+        description: string;
+        fullurl: string;
+      };
+    };
+  };
+};
+
+type WikipediaResultType = {
+  pageId: number;
+  title: string;
+  thumbnail: { source: string };
+  description: string;
+  fullurl: string;
 };
 
 export class CatalogData {
@@ -84,12 +106,21 @@ export class CatalogData {
       )
     ).data;
 
+    const wikipediaReturnValue = (
+      await axios.get<WikipediaResponseType>(
+        `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${scientificName}>&gsrlimit=1&format=json&prop=pageimages%7cdescription%7cinfo&pilimit=1&pithumbsize=500&inprop=url&piprop=thumbnail`
+      )
+    ).data;
+    const wikipediaReturnKey = Object.keys(wikipediaReturnValue.query.pages)[0];
+    const wikipediaResult =
+      wikipediaReturnValue.query.pages[wikipediaReturnKey];
+
     return {
       species: scientificName,
       usageKey: gbifUsageKey,
       vernacularName: getEnglishVernacularName(gbifVernacularNames),
       descriptions: gbifDescriptions,
-      wikipediaImage: undefined,
+      wikipediaResult,
     };
   }
 }
