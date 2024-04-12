@@ -1,12 +1,13 @@
 import { dataController } from "../controllers";
 import axios from "axios";
+import { DataType } from "./dataModel";
 
 export type TotalCatalogInfoType = {
   totalAnimals?: number;
   totalPages?: number;
 };
 
-export type CatalogDataType = {
+export type CatalogDataType = DataType & {
   species?: string;
   usageKey?: string;
   vernacularName?: string;
@@ -77,17 +78,18 @@ export class CatalogData {
 
   static async init() {
     const catalogData = CatalogData.getInstance();
-    const scientificNames = dataController.getAllScientificNames();
+    const observationsData = dataController.getAllData().data;
     CatalogData.data = await Promise.all(
-      scientificNames.map((scientificName) =>
-        CatalogData.getEntryData(scientificName)
+      observationsData.map((observation) =>
+        CatalogData.getEntryData(observation)
       )
     );
   }
 
   private static async getEntryData(
-    scientificName: string
+    observation: DataType
   ): Promise<CatalogDataType> {
+    const scientificName = observation.scientificName;
     const { usageKey: gbifUsageKey } = (
       await axios.get<{ usageKey: string }>(
         `https://api.gbif.org/v1/species/match?name=${scientificName}`
@@ -116,6 +118,7 @@ export class CatalogData {
       wikipediaReturnValue.query.pages[wikipediaReturnKey];
 
     return {
+      ...observation,
       species: scientificName,
       usageKey: gbifUsageKey,
       vernacularName: getEnglishVernacularName(gbifVernacularNames),

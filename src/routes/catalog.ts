@@ -3,7 +3,7 @@ import { catalogController } from "../controllers/catalogController";
 
 export const catalogRouter = Router();
 
-catalogRouter.get("/data", (req, res) => {
+catalogRouter.get("/data", (_req, res) => {
   res.json(catalogController.getCatalogData());
 });
 
