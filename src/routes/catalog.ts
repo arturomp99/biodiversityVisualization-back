@@ -3,9 +3,8 @@ import { catalogController } from "../controllers/catalogController";
 
 export const catalogRouter = Router();
 
-catalogRouter.get("/data/:pageId", (req, res) => {
-  const pageId: string = req.params.pageId;
-  res.json(catalogController.getCatalogData(+pageId ?? 1));
+catalogRouter.get("/data", (req, res) => {
+  res.json(catalogController.getCatalogData());
 });
 
 catalogRouter.get("/total", (_req, res) =>
