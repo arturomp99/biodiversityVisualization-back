@@ -5,8 +5,17 @@ import {
 } from "../models/catalogModel";
 
 const getCatalogData = (): CatalogDataType[] | undefined => {
-  const animalsPerPage = +(process.env.CATALOG_ANIMALS_PER_PAGE ?? 10);
   return CatalogData.data;
+};
+
+const getCatalogEntry = (
+  scientificName: string
+): CatalogDataType | undefined => {
+  const catalogData = CatalogData.data;
+  return catalogData?.find(
+    (catalogEntry) =>
+      catalogEntry.scientificName.replace(" ", "-") === scientificName
+  );
 };
 
 const getTotalCatalogInfo = (): TotalCatalogInfoType | undefined => {
@@ -22,4 +31,8 @@ const getTotalCatalogInfo = (): TotalCatalogInfoType | undefined => {
   };
 };
 
-export const catalogController = { getCatalogData, getTotalCatalogInfo };
+export const catalogController = {
+  getCatalogData,
+  getTotalCatalogInfo,
+  getCatalogEntry,
+};
