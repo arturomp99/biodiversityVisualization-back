@@ -45,8 +45,7 @@ export type DataType = Record<TaxonomicLevelsType, string> & {
   individualCount: string[];
   organismQuantity: string[];
   organismQuantityType: string[];
-  decimalLatitude: string[];
-  decimalLongitude: string[];
+  position: { latitude: string; longitude: string }[];
   geodeticDatum: string[];
   coordinateUncertaintyInMeters: string[];
   verbatimCoordinates: string[];
@@ -78,8 +77,7 @@ const arrayProperties = [
   "individualCount",
   "organismQuantity",
   "organismQuantityType",
-  "decimalLatitude",
-  "decimalLongitude",
+  "position",
   "geodeticDatum",
   "coordinateUncertaintyInMeters",
   "verbatimCoordinates",
@@ -114,7 +112,15 @@ export class DataModel {
 
   private rowTransform(value: string, field: string) {
     if (arrayProperties.includes(field)) {
-      return value.split(",");
+      const valueArray = value.split(",");
+      if (field === "position") {
+        const newValue = valueArray.map((entry) => {
+          const entryArray = entry.split("/");
+          return { latitude: entryArray[0], longitude: entryArray[1] };
+        });
+        return newValue;
+      }
+      return valueArray;
     }
     if (numberProperties.includes(field)) {
       return +value;
