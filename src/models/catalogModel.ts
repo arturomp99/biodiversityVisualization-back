@@ -13,6 +13,7 @@ export type CatalogDataType = DataType & {
   vernacularName?: string;
   descriptions?: GBIFDescriptionType["results"];
   wikipediaResult?: WikipediaResultType;
+  xenoCantoResult: XenoCantoRecordingType;
 };
 
 type GBIFVernacularNamesType = {
@@ -51,6 +52,30 @@ type WikipediaResponseType = {
   };
 };
 
+type XenoCantoRecordingType = {
+  id: string;
+  get: string;
+  sp: string;
+  group: string;
+  en: string;
+  rec: string;
+  cnt: string;
+  loc: string;
+  type: string;
+  sex: string;
+  stage: string;
+  file: string;
+  date: string;
+};
+
+type XenoCantoResponseType = {
+  numRecordings: string;
+  numSpecies: string;
+  page: string;
+  numPages: string;
+  recordings: XenoCantoRecordingType[];
+};
+
 type WikipediaResultType = {
   pageId: number;
   title: string;
@@ -77,13 +102,21 @@ export class CatalogData {
   }
 
   static async init() {
+    console.log("getting catlog data...");
     const catalogData = CatalogData.getInstance();
     const observationsData = dataController.getAllData().data;
-    CatalogData.data = await Promise.all(
-      observationsData.map((observation) =>
-        CatalogData.getEntryData(observation)
-      )
-    );
+    // CatalogData.data = await Promise.all(
+    //   observationsData.map((observation) =>
+    //     CatalogData.getEntryData(observation)
+    //   )
+    // );
+    for (const entry of dataController.getAllData().data) {
+      CatalogData.data = [
+        ...(CatalogData.data ?? []),
+        await CatalogData.getEntryData(entry),
+      ];
+    }
+    console.log("** CATALOG DATA READY **");
   }
 
   private static async getEntryData(
@@ -117,13 +150,34 @@ export class CatalogData {
     const wikipediaResult =
       wikipediaReturnValue.query.pages[wikipediaReturnKey];
 
+    console.log(
+      `fetch ${`https://xeno-canto.org/api/2/recordings?query=${scientificName.replace(
+        " ",
+        "+"
+      )}`}`
+    );
+    const xenoCantoReturnValue = (
+      await axios.get<XenoCantoResponseType>(
+        `https://xeno-canto.org/api/2/recordings?query=${scientificName.replace(
+          " ",
+          "+"
+        )}`
+      )
+    ).data;
+    const xenoCantoResult =
+      xenoCantoReturnValue.recordings.find(
+        (recording) => recording.cnt.toLowerCase() === "singapore"
+      ) ?? xenoCantoReturnValue.recordings[0];
+
+    console.log(`${scientificName} successful`);
     return {
       ...observation,
-      species: scientificName,
+      scientificName: scientificName,
       usageKey: gbifUsageKey,
       vernacularName: getEnglishVernacularName(gbifVernacularNames),
       descriptions: gbifDescriptions,
       wikipediaResult,
+      xenoCantoResult,
     };
   }
 }
