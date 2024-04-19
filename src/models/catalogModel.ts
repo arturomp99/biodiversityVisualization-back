@@ -12,7 +12,7 @@ export type CatalogDataType = DataType & {
   molInfo?: MOLResult;
   xenoCantoResult?: XenoCantoRecordingType;
   wikipediaResult?: WikipediaResultType;
-  gbifVernacularName?: GBIFVernacularNamesType["results"];
+  gbifVernacularName?: GBIFVernacularNamesType["results"][0];
 };
 
 type XenoCantoRecordingType = {
@@ -128,7 +128,7 @@ export class CatalogData {
 
     // Backup
     let wikipediaResult: WikipediaResponsePageType | undefined = undefined;
-    let gbifVernacularName: GBIFVernacularNamesType["results"] | undefined =
+    let gbifVernacularName: GBIFVernacularNamesType["results"][0] | undefined =
       undefined;
     if (!molInfo[0]) {
       const wikipediaReturnValue = (
@@ -151,7 +151,9 @@ export class CatalogData {
           `https://api.gbif.org/v1/species/${gbifUsageKey}/vernacularNames?limit=10&offset=1`
         )
       ).data;
-      gbifVernacularName = gbifVernacularNamesResult;
+      gbifVernacularName = gbifVernacularNamesResult.find(
+        (name) => name.language === "eng"
+      );
     }
 
     console.log(
