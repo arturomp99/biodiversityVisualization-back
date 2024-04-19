@@ -9,47 +9,10 @@ export type TotalCatalogInfoType = {
 
 export type CatalogDataType = DataType & {
   species?: string;
-  usageKey?: string;
-  vernacularName?: string;
-  descriptions?: GBIFDescriptionType["results"];
+  molInfo?: MOLResult;
+  xenoCantoResult?: XenoCantoRecordingType;
   wikipediaResult?: WikipediaResultType;
-  xenoCantoResult: XenoCantoRecordingType;
-};
-
-type GBIFVernacularNamesType = {
-  results: { vernacularName: string; language: string }[];
-};
-
-type GBIFDescriptionType = {
-  results: {
-    type:
-      | "conservation"
-      | "discussion"
-      | "distribution"
-      | "materials_examined"
-      | "activity"
-      | "biology_ecology"
-      | "breeding"
-      | "description"
-      | "food_feeding"
-      | "vernacular_names";
-    description: string;
-    source: string;
-  }[];
-};
-
-type WikipediaResponseType = {
-  query: {
-    pages: {
-      [key: string]: {
-        pageId: number;
-        title: string;
-        thumbnail: { source: string };
-        description: string;
-        fullurl: string;
-      };
-    };
-  };
+  gbifVernacularName?: GBIFVernacularNamesType["results"][0];
 };
 
 type XenoCantoRecordingType = {
@@ -76,12 +39,49 @@ type XenoCantoResponseType = {
   recordings: XenoCantoRecordingType[];
 };
 
+type MOLResult = {
+  info: [
+    {
+      content: string;
+      source: string;
+      lang: string;
+    }
+  ];
+  rangemap: string;
+  family: [{ lang: string; name: string }];
+  taxa: string;
+  commonname: string;
+  redlist_link: string;
+  scientificname: string;
+  image: { url: string };
+};
+
 type WikipediaResultType = {
   pageId: number;
   title: string;
   thumbnail: { source: string };
   description: string;
   fullurl: string;
+};
+
+type WikipediaResponsePageType = {
+  pageId: number;
+  title: string;
+  thumbnail: { source: string };
+  description: string;
+  fullurl: string;
+};
+
+type WikipediaResponseType = {
+  query: {
+    pages: {
+      [key: string]: WikipediaResponsePageType;
+    };
+  };
+};
+
+type GBIFVernacularNamesType = {
+  results: { vernacularName: string; language: string }[];
 };
 
 export class CatalogData {
@@ -103,13 +103,6 @@ export class CatalogData {
 
   static async init() {
     console.log("getting catlog data...");
-    const catalogData = CatalogData.getInstance();
-    const observationsData = dataController.getAllData().data;
-    // CatalogData.data = await Promise.all(
-    //   observationsData.map((observation) =>
-    //     CatalogData.getEntryData(observation)
-    //   )
-    // );
     for (const entry of dataController.getAllData().data) {
       CatalogData.data = [
         ...(CatalogData.data ?? []),
@@ -123,32 +116,45 @@ export class CatalogData {
     observation: DataType
   ): Promise<CatalogDataType> {
     const scientificName = observation.scientificName;
-    const { usageKey: gbifUsageKey } = (
-      await axios.get<{ usageKey: string }>(
-        `https://api.gbif.org/v1/species/match?name=${scientificName}`
+    console.log("arturo molInfo", scientificName.replace(" ", "+"));
+    const molInfo = (
+      await axios.get<MOLResult[]>(
+        `https://api.mol.org/1.x/species/info?scientificname=${scientificName.replace(
+          " ",
+          "+"
+        )}`
       )
     ).data;
 
-    const { results: gbifVernacularNames } = (
-      await axios.get<GBIFVernacularNamesType>(
-        `https://api.gbif.org/v1/species/${gbifUsageKey}/vernacularNames?limit=10&offset=1`
-      )
-    ).data;
+    // Backup
+    let wikipediaResult: WikipediaResponsePageType | undefined = undefined;
+    let gbifVernacularName: GBIFVernacularNamesType["results"][0] | undefined =
+      undefined;
+    if (!molInfo[0]) {
+      const wikipediaReturnValue = (
+        await axios.get<WikipediaResponseType>(
+          `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${scientificName}>&gsrlimit=1&format=json&prop=pageimages%7cdescription%7cinfo&pilimit=1&pithumbsize=500&inprop=url&piprop=thumbnail`
+        )
+      ).data;
+      const wikipediaReturnKey = Object.keys(
+        wikipediaReturnValue?.query.pages
+      )[0];
+      wikipediaResult = wikipediaReturnValue.query.pages[wikipediaReturnKey];
 
-    const { results: gbifDescriptions } = (
-      await axios.get<GBIFDescriptionType>(
-        `https://api.gbif.org/v1/species/${gbifUsageKey}/descriptions?limit=10&offset=0`
-      )
-    ).data;
-
-    const wikipediaReturnValue = (
-      await axios.get<WikipediaResponseType>(
-        `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${scientificName}>&gsrlimit=1&format=json&prop=pageimages%7cdescription%7cinfo&pilimit=1&pithumbsize=500&inprop=url&piprop=thumbnail`
-      )
-    ).data;
-    const wikipediaReturnKey = Object.keys(wikipediaReturnValue.query.pages)[0];
-    const wikipediaResult =
-      wikipediaReturnValue.query.pages[wikipediaReturnKey];
+      const { usageKey: gbifUsageKey } = (
+        await axios.get<{ usageKey: string }>(
+          `https://api.gbif.org/v1/species/match?name=${scientificName}`
+        )
+      ).data;
+      const { results: gbifVernacularNamesResult } = (
+        await axios.get<GBIFVernacularNamesType>(
+          `https://api.gbif.org/v1/species/${gbifUsageKey}/vernacularNames?limit=10&offset=1`
+        )
+      ).data;
+      gbifVernacularName = gbifVernacularNamesResult.find(
+        (name) => name.language === "eng"
+      );
+    }
 
     console.log(
       `fetch ${`https://xeno-canto.org/api/2/recordings?query=${scientificName.replace(
@@ -173,20 +179,10 @@ export class CatalogData {
     return {
       ...observation,
       scientificName: scientificName,
-      usageKey: gbifUsageKey,
-      vernacularName: getEnglishVernacularName(gbifVernacularNames),
-      descriptions: gbifDescriptions,
-      wikipediaResult,
+      molInfo: molInfo[0],
       xenoCantoResult,
+      wikipediaResult,
+      gbifVernacularName,
     };
   }
 }
-
-const getEnglishVernacularName = (
-  names: GBIFVernacularNamesType["results"]
-): string => {
-  for (const name of names) {
-    if (name.language === "eng") return name.vernacularName;
-  }
-  return "";
-};
