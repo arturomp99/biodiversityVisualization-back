@@ -1,3 +1,4 @@
+import { uniq } from "lodash";
 import { DataType, taxonomicLevels } from "../models/dataModel";
 import { FiltersType } from "../models/filtersModel.types";
 import { dataController } from "./dataController";
@@ -8,6 +9,8 @@ export const getAllFilters = (): FiltersType => {
     taxonomic: getTaxonomicFiltersData(data),
     temporal: getTemporalFiltersData(data),
     drop: getDropFiltersData(data),
+    location: getLocationFiltersData(data),
+    identificationMethod: getIdentificationMethodData(data),
   };
 };
 
@@ -60,6 +63,38 @@ const getDropFiltersData = (data: DataType[]) => {
   );
 
   return dropFiltersData;
+};
+
+const getLocationFiltersData = (data: DataType[]) => {
+  const locationFiltersData = data
+    .flatMap((dataPoint) =>
+      dataPoint.position.map((dataPointPosition) => ({
+        latitude: +dataPointPosition.latitude,
+        longitude: +dataPointPosition.longitude,
+      }))
+    )
+    .reduce<NonNullable<FiltersType["location"]>>(
+      (acc: NonNullable<FiltersType["location"]>, curr) => {
+        const accFound = acc.find(
+          (accumulatedPosition) =>
+            accumulatedPosition.latitude === curr.latitude &&
+            accumulatedPosition.longitude === curr.longitude
+        );
+        return !!accFound ? acc : [...acc, curr];
+      },
+      []
+    );
+  return locationFiltersData;
+};
+
+const getIdentificationMethodData = (data: DataType[]) => {
+  const identificationMethodFiltersData = uniq(
+    data.flatMap(
+      (dataPoint): NonNullable<FiltersType["identificationMethod"]> =>
+        dataPoint.identifiedBy
+    )
+  );
+  return identificationMethodFiltersData;
 };
 
 export const filtersController = { getAllFilters };
