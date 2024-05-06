@@ -28,9 +28,11 @@
     "typescript": "^5.4.4"
   },
   "dependencies": {
+    "@types/lodash": "^4.17.0",
     "axios": "^1.6.8",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "lodash": "^4.17.21",
     "papaparse": "^5.4.1",
     "ts-node": "^10.9.2"
   }

@@ -125,7 +125,6 @@ export class CatalogData {
         )}`
       )
     ).data;
-
     // Backup
     let wikipediaResult: WikipediaResponsePageType | undefined = undefined;
     let gbifVernacularName: GBIFVernacularNamesType["results"][0] | undefined =
@@ -136,24 +135,33 @@ export class CatalogData {
           `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${scientificName}>&gsrlimit=1&format=json&prop=pageimages%7cdescription%7cinfo&pilimit=1&pithumbsize=500&inprop=url&piprop=thumbnail`
         )
       ).data;
+      console.log("arturo return wikipediaReturnValue", wikipediaReturnValue);
+
       const wikipediaReturnKey = Object.keys(
         wikipediaReturnValue?.query.pages
       )[0];
       wikipediaResult = wikipediaReturnValue.query.pages[wikipediaReturnKey];
+      console.log("arturo return wikipediaResult", wikipediaResult);
 
       const { usageKey: gbifUsageKey } = (
         await axios.get<{ usageKey: string }>(
           `https://api.gbif.org/v1/species/match?name=${scientificName}`
         )
       ).data;
+      console.log("arturo return gbifUsageKey", gbifUsageKey);
       const { results: gbifVernacularNamesResult } = (
         await axios.get<GBIFVernacularNamesType>(
           `https://api.gbif.org/v1/species/${gbifUsageKey}/vernacularNames?limit=10&offset=1`
         )
       ).data;
+      console.log(
+        "arturo return gbifVernacularNamesResult",
+        gbifVernacularNamesResult
+      );
       gbifVernacularName = gbifVernacularNamesResult.find(
         (name) => name.language === "eng"
       );
+      console.log("arturo return gbifVernacularName", gbifVernacularName);
     }
 
     console.log(
