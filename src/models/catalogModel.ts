@@ -148,28 +148,17 @@ export class CatalogData {
           `https://api.gbif.org/v1/species/match?name=${scientificName}`
         )
       ).data;
-      console.log("arturo return gbifUsageKey", gbifUsageKey);
       const { results: gbifVernacularNamesResult } = (
         await axios.get<GBIFVernacularNamesType>(
           `https://api.gbif.org/v1/species/${gbifUsageKey}/vernacularNames?limit=10&offset=1`
         )
       ).data;
-      console.log(
-        "arturo return gbifVernacularNamesResult",
-        gbifVernacularNamesResult
-      );
       gbifVernacularName = gbifVernacularNamesResult.find(
         (name) => name.language === "eng"
       );
-      console.log("arturo return gbifVernacularName", gbifVernacularName);
+      console.log("gbifVernacularName", gbifVernacularName);
     }
 
-    console.log(
-      `fetch ${`https://xeno-canto.org/api/2/recordings?query=${scientificName.replace(
-        " ",
-        "+"
-      )}`}`
-    );
     const xenoCantoReturnValue = (
       await axios.get<XenoCantoResponseType>(
         `https://xeno-canto.org/api/2/recordings?query=${scientificName.replace(
